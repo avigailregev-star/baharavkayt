@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
@@ -28,7 +29,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Search, Plus, Trash2, Pencil } from "lucide-react";
+import { AlertCircle, Search, Plus, Trash2, Pencil, Upload, X } from "lucide-react";
+import { toast } from "sonner";
 
 const categories = [
   "סלטים",
@@ -80,7 +82,9 @@ export default function AdminProducts() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setIsCreating(false);
-    }
+      toast.success("המוצר נוסף בהצלחה");
+    },
+    onError: (error) => toast.error(error.message || "לא הצלחנו להוסיף את המוצר")
   });
 
   const updateProductMutation = useMutation({
@@ -88,14 +92,18 @@ export default function AdminProducts() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setSelectedProduct(null);
-    }
+      toast.success("המוצר עודכן בהצלחה");
+    },
+    onError: (error) => toast.error(error.message || "לא הצלחנו לעדכן את המוצר")
   });
 
   const deleteProductMutation = useMutation({
     mutationFn: (id) => base44.entities.Product.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-    }
+      toast.success("המוצר נמחק");
+    },
+    onError: (error) => toast.error(error.message || "לא הצלחנו למחוק את המוצר")
   });
 
   const uncategorizedProducts = products.filter(p => {
@@ -249,7 +257,11 @@ export default function AdminProducts() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => deleteProductMutation.mutate(product.id)}
+                          onClick={() => {
+                            if (window.confirm(`למחוק את "${product.name}"?`)) {
+                              deleteProductMutation.mutate(product.id);
+                            }
+                          }}
                           className="hover:bg-red-50 hover:text-red-600"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -276,6 +288,10 @@ export default function AdminProducts() {
               product={selectedProduct}
               onSave={handleSaveProduct}
               isLoading={createProductMutation.isPending || updateProductMutation.isPending}
+              categoryOptions={Array.from(new Set([
+                ...categories,
+                ...products.flatMap((p) => Array.isArray(p.category) ? p.category : [p.category]).filter(Boolean)
+              ]))}
             />
           )}
         </SheetContent>
@@ -284,23 +300,22 @@ export default function AdminProducts() {
   );
 }
 
-function ProductForm({ product, onSave, isLoading }) {
+function ProductForm({ product, onSave, isLoading, categoryOptions }) {
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     image: [],
-    category: ["סלטים"],
+    category: "סלטים",
     active: true
   });
 
   useEffect(() => {
     if (product) {
-      const category = Array.isArray(product.category) 
-        ? product.category 
-        : product.category 
-          ? [product.category] 
-          : [];
+      const category = Array.isArray(product.category)
+        ? product.category[0] || ""
+        : product.category || "";
       
       setFormData({
         ...product,
@@ -313,11 +328,45 @@ function ProductForm({ product, onSave, isLoading }) {
         description: "",
         price: "",
         image: [],
-        category: ["סלטים"],
+        category: "סלטים",
         active: true
       });
     }
   }, [product]);
+
+  const handleImageUpload = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    setIsUploading(true);
+    try {
+      const uploadedUrls = [];
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) throw new Error("ניתן להעלות קובצי תמונה בלבד");
+        if (file.size > 8 * 1024 * 1024) throw new Error("גודל תמונה מרבי הוא 8MB");
+
+        const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = `${crypto.randomUUID()}.${extension}`;
+        const { error } = await supabase.storage
+          .from("product-images")
+          .upload(path, file, { cacheControl: "3600", upsert: false });
+        if (error) throw error;
+
+        const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+        uploadedUrls.push(data.publicUrl);
+      }
+      setFormData((current) => ({
+        ...current,
+        image: [...(Array.isArray(current.image) ? current.image : []), ...uploadedUrls]
+      }));
+      toast.success(`נוספו ${uploadedUrls.length} תמונות`);
+    } catch (error) {
+      toast.error(error.message || "העלאת התמונה נכשלה");
+    } finally {
+      setIsUploading(false);
+      event.target.value = "";
+    }
+  };
 
   return (
     <>
@@ -372,61 +421,72 @@ function ProductForm({ product, onSave, isLoading }) {
         {/* Category */}
         <div>
           <Label className="text-slate-700 font-medium mb-2 block">
-            קטגוריות *
+            קטגוריה *
           </Label>
-          <div className="space-y-2 border border-slate-200 rounded-xl p-4 max-h-64 overflow-y-auto">
-            {categories.map((cat) => (
-              <label key={cat} className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg">
-                <input
-                  type="checkbox"
-                  checked={Array.isArray(formData.category) && formData.category.includes(cat)}
-                  onChange={(e) => {
-                    const currentCategories = Array.isArray(formData.category) ? formData.category : [formData.category];
-                    if (e.target.checked) {
-                      setFormData({ ...formData, category: [...currentCategories, cat] });
-                    } else {
-                      setFormData({ ...formData, category: currentCategories.filter(c => c !== cat) });
-                    }
-                  }}
-                  className="w-4 h-4 text-amber-500 rounded focus:ring-amber-500"
-                />
-                <span className="text-sm text-slate-700">{cat}</span>
-              </label>
-            ))}
-            <label className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg">
-              <input
-                type="checkbox"
-                checked={Array.isArray(formData.category) && formData.category.includes("ללא קטגוריה")}
-                onChange={(e) => {
-                  const currentCategories = Array.isArray(formData.category) ? formData.category : [formData.category];
-                  if (e.target.checked) {
-                    setFormData({ ...formData, category: [...currentCategories, "ללא קטגוריה"] });
-                  } else {
-                    setFormData({ ...formData, category: currentCategories.filter(c => c !== "ללא קטגוריה") });
-                  }
-                }}
-                className="w-4 h-4 text-amber-500 rounded focus:ring-amber-500"
-              />
-              <span className="text-sm text-slate-700">ללא קטגוריה</span>
-            </label>
-          </div>
+          <Select
+            value={categoryOptions.includes(formData.category) ? formData.category : "custom"}
+            onValueChange={(value) => setFormData({
+              ...formData,
+              category: value === "custom" ? "" : value
+            })}
+          >
+            <SelectTrigger className="h-12 rounded-xl">
+              <SelectValue placeholder="בחרי קטגוריה" />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryOptions.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+              <SelectItem value="custom">+ קטגוריה חדשה</SelectItem>
+            </SelectContent>
+          </Select>
+          {!categoryOptions.includes(formData.category) && (
+            <Input
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              placeholder="שם הקטגוריה החדשה"
+              className="h-12 rounded-xl mt-3"
+            />
+          )}
         </div>
 
-        {/* Image URL */}
+        {/* Images */}
         <div>
           <Label className="text-slate-700 font-medium mb-2 block">
-            קישורים לתמונות (אחד בכל שורה)
+            תמונות
           </Label>
-          <Textarea
-            value={Array.isArray(formData.image) ? formData.image.join("\n") : formData.image || ""}
-            onChange={(e) => {
-              const urls = e.target.value.split("\n").map(url => url.trim()).filter(url => url);
-              setFormData({ ...formData, image: urls });
-            }}
-            placeholder="https://..."
-            rows={3}
-            className="rounded-xl resize-none"
-          />
+          <label className="flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50 text-amber-700 cursor-pointer hover:bg-amber-100 transition-colors">
+            <Upload className="w-4 h-4" />
+            <span>{isUploading ? "מעלה תמונות..." : "בחרי תמונות מהמחשב"}</span>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              disabled={isUploading}
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+          </label>
+          {formData.image.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              {formData.image.map((url, index) => (
+                <div key={`${url}-${index}`} className="relative rounded-xl overflow-hidden border bg-slate-50 aspect-square">
+                  <img src={url} alt={`תמונת מוצר ${index + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setFormData({
+                      ...formData,
+                      image: formData.image.filter((_, imageIndex) => imageIndex !== index)
+                    })}
+                    className="absolute top-2 left-2 rounded-full bg-white/90 p-1.5 text-red-600 shadow hover:bg-white"
+                    aria-label="הסרת תמונה"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Active */}
@@ -451,7 +511,7 @@ function ProductForm({ product, onSave, isLoading }) {
         {/* Save Button */}
         <Button
           onClick={() => onSave(formData)}
-          disabled={isLoading || !formData.name || !formData.price || !Array.isArray(formData.category) || formData.category.length === 0}
+          disabled={isLoading || isUploading || !formData.name || !formData.price || !formData.category.trim()}
           className="w-full h-12 bg-amber-500 hover:bg-amber-600 rounded-xl"
         >
           {isLoading ? "שומר..." : "שמור"}
