@@ -36,8 +36,13 @@ export default function CheckoutForm({
     e.preventDefault();
 
     // Validation
-    if (!customerName || !phone) {
+    if (!isGift && (!customerName.trim() || !phone.trim())) {
       toast.error("אנא מלאי שם וטלפון");
+      return;
+    }
+
+    if (isGift && (!senderName.trim() || !senderPhone.trim() || !recipientName.trim() || !phone.trim())) {
+      toast.error("אנא מלאי את שמות וטלפוני השולח והמקבל");
       return;
     }
 
@@ -59,10 +64,6 @@ export default function CheckoutForm({
     if (deliveryMethod === "משלוח") {
       if (!deliveryAddress) {
         toast.error("אנא הכניסי כתובת למשלוח");
-        return;
-      }
-      if (isGift && (!senderName || !senderPhone || !recipientName)) {
-        toast.error("אנא מלאי את כל פרטי המתנה");
         return;
       }
     }
