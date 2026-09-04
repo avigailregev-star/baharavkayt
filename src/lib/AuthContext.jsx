@@ -2,6 +2,10 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/api/supabaseClient';
 
 const AuthContext = createContext();
+const ADMIN_EMAIL = 'avigailregev@gmail.com';
+
+const isAdminUser = (user) =>
+  user?.email?.toLowerCase() === ADMIN_EMAIL;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -10,14 +14,16 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setIsAuthenticated(!!session?.user);
+      const sessionUser = session?.user ?? null;
+      setUser(sessionUser);
+      setIsAuthenticated(isAdminUser(sessionUser));
       setIsLoadingAuth(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setIsAuthenticated(!!session?.user);
+      const sessionUser = session?.user ?? null;
+      setUser(sessionUser);
+      setIsAuthenticated(isAdminUser(sessionUser));
     });
 
     return () => subscription.unsubscribe();

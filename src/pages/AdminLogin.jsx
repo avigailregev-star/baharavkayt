@@ -15,10 +15,14 @@ export default function AdminLogin() {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError("אימייל או סיסמה שגויים");
+      setLoading(false);
+    } else if (data.user?.email?.toLowerCase() !== "avigailregev@gmail.com") {
+      await supabase.auth.signOut();
+      setError("אין לחשבון זה הרשאת ניהול");
       setLoading(false);
     } else {
       const params = new URLSearchParams(window.location.search);

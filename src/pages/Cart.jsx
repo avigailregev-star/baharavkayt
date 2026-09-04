@@ -43,7 +43,8 @@ export default function Cart() {
       await clearCart();
       setIsSubmitted(true);
     } catch (error) {
-      toast.error("שגיאה בשליחת ההזמנה");
+      console.error("Order submission failed:", error);
+      toast.error("ההזמנה לא נשלחה. אנא נסי שוב או שלחי בוואטסאפ");
     } finally {
       setIsSubmitting(false);
     }

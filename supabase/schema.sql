@@ -29,12 +29,19 @@ create table menu_items (
 create table orders (
   id               uuid default gen_random_uuid() primary key,
   customer_name    text,
-  customer_phone   text,
+  phone            text,
   customer_email   text,
   event_date       date,
   event_type       text,
   guests_count     integer,
   delivery_address text,
+  delivery_method  text,
+  ready_time       timestamptz,
+  is_gift          boolean default false,
+  gift_message     text,
+  sender_name      text,
+  sender_phone     text,
+  recipient_name   text,
   notes            text,
   status           text default 'pending',
   total_price      numeric,
@@ -63,15 +70,23 @@ alter table order_items enable row level security;
 create policy "public read products"   on products   for select using (true);
 create policy "public read menu_items" on menu_items for select using (true);
 
--- Only logged-in admin can write products / menu items
-create policy "admin write products"   on products   for all using (auth.role() = 'authenticated');
-create policy "admin write menu_items" on menu_items for all using (auth.role() = 'authenticated');
+-- Only the designated admin can write products / menu items
+create policy "admin write products" on products for all
+  using (lower(auth.jwt() ->> 'email') = 'avigailregev@gmail.com')
+  with check (lower(auth.jwt() ->> 'email') = 'avigailregev@gmail.com');
+create policy "admin write menu_items" on menu_items for all
+  using (lower(auth.jwt() ->> 'email') = 'avigailregev@gmail.com')
+  with check (lower(auth.jwt() ->> 'email') = 'avigailregev@gmail.com');
 
 -- Anyone can place an order (insert)
 create policy "public create orders"      on orders      for insert with check (true);
 create policy "public create order_items" on order_items for insert with check (true);
 
--- Only admin can read / update orders
-create policy "admin read orders"        on orders      for select using (auth.role() = 'authenticated');
-create policy "admin update orders"      on orders      for update using (auth.role() = 'authenticated');
-create policy "admin read order_items"   on order_items for select using (auth.role() = 'authenticated');
+-- Only the designated admin can read / update orders
+create policy "admin read orders" on orders for select
+  using (lower(auth.jwt() ->> 'email') = 'avigailregev@gmail.com');
+create policy "admin update orders" on orders for update
+  using (lower(auth.jwt() ->> 'email') = 'avigailregev@gmail.com')
+  with check (lower(auth.jwt() ->> 'email') = 'avigailregev@gmail.com');
+create policy "admin read order_items" on order_items for select
+  using (lower(auth.jwt() ->> 'email') = 'avigailregev@gmail.com');

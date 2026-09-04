@@ -57,13 +57,13 @@ const createEntity = (tableName, fieldMap = {}) => {
     },
 
     async create(inputData) {
-      const { data, error } = await supabase
+      const id = inputData.id ?? crypto.randomUUID();
+      const dbData = mapToDb({ ...inputData, id });
+      const { error } = await supabase
         .from(tableName)
-        .insert(mapToDb(inputData))
-        .select()
-        .single();
+        .insert(dbData);
       if (error) throw error;
-      return mapFromDb(data);
+      return mapFromDb(dbData);
     },
 
     async update(id, inputData) {
