@@ -42,6 +42,9 @@ export default function Cart() {
 
       await clearCart();
       setIsSubmitted(true);
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
     } catch (error) {
       console.error("Order submission failed:", error);
       toast.error("ההזמנה לא נשלחה. אנא נסי שוב או שלחי בוואטסאפ");
