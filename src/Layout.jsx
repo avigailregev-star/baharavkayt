@@ -5,12 +5,14 @@ import { Menu, X, Phone, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CartProvider, useCart } from "@/components/cart/CartContext";
+import { useAuth } from "@/lib/AuthContext";
 
 const adminPages = ["AdminOrders", "AdminProducts"];
 
 function LayoutContent({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { getTotalItems } = useCart();
+  const { logout } = useAuth();
 
   const isAdminPage = adminPages.includes(currentPageName);
 
@@ -42,9 +44,24 @@ function LayoutContent({ children, currentPageName }) {
 
                 <span className="text-lg font-bold text-slate-700">ניהול הזמנות</span>
               </div>
-              <Link to={createPageUrl("Home")}>
-                <Button variant="outline" size="sm">חזרה לאתר</Button>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link to={createPageUrl("AdminOrders")}>
+                  <Button variant={currentPageName === "AdminOrders" ? "default" : "outline"} size="sm">
+                    הזמנות
+                  </Button>
+                </Link>
+                <Link to={createPageUrl("AdminProducts")}>
+                  <Button variant={currentPageName === "AdminProducts" ? "default" : "outline"} size="sm">
+                    מוצרים
+                  </Button>
+                </Link>
+                <Link to={createPageUrl("Home")}>
+                  <Button variant="outline" size="sm">חזרה לאתר</Button>
+                </Link>
+                <Button variant="ghost" size="sm" onClick={() => logout()}>
+                  יציאה
+                </Button>
+              </div>
             </div>
           </div>
         </header>
