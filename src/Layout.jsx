@@ -27,7 +27,7 @@ function LayoutContent({ children, currentPageName }) {
   { name: "מגשי פירות", page: "FruitTrays" },
   { name: "גלריה", page: "Gallery" },
   { name: "מי אני", page: "About" },
-  { name: "בואו נזמין 💛", page: "OrderRequest" }];
+  { name: "בואו נזמין 💛", page: "Cart" }];
 
 
   if (isAdminPage) {
