@@ -25,7 +25,6 @@ function LayoutContent({ children, currentPageName }) {
   { name: "בית", page: "Home" },
   { name: "מוצרים", page: "Products" },
   { name: "מגשי פירות", page: "FruitTrays" },
-  { name: "גלריה", page: "Gallery" },
   { name: "מי אני", page: "About" },
   { name: "בואו נזמין 💛", page: "Cart" }];
 
