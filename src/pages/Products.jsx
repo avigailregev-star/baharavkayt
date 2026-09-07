@@ -173,18 +173,18 @@ export default function Products() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Category Filter */}
-            <div className="flex-1">
-              <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-                <SelectTrigger className="h-auto min-h-12 rounded-xl bg-white text-right py-3">
+            <div className="min-w-0 flex-1">
+              <Select dir="rtl" value={selectedCategory} onValueChange={handleCategoryChange}>
+                <SelectTrigger className="h-auto min-h-12 rounded-xl bg-white text-right py-3 gap-2 whitespace-normal [&>span]:line-clamp-none [&>span]:min-w-0 [&>span]:break-words [&>svg]:shrink-0">
                   <SelectValue placeholder="בחר קטגוריה" className="block w-full whitespace-normal" />
                 </SelectTrigger>
-                <SelectContent className="max-w-[90vw] sm:max-w-md">
+                <SelectContent align="start" className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)] [&>[data-radix-select-viewport]]:min-w-0">
                   <SelectItem value="כל הקטגוריות">כל הקטגוריות</SelectItem>
                   {categories.map((category) => (
                     <SelectItem 
                       key={category} 
                       value={category} 
-                      className="whitespace-normal text-right py-3 leading-relaxed"
+                      className="whitespace-normal break-words text-right py-3 leading-relaxed [&>span:last-child]:min-w-0"
                     >
                       {category}
                     </SelectItem>
