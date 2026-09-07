@@ -1,3 +1,4 @@
+import { sumPrices } from "@/lib/price";
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const CartContext = createContext();
@@ -79,7 +80,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const getTotalPrice = () =>
-    cartItems.reduce((sum, item) => sum + item.price_at_time * item.quantity, 0);
+    sumPrices(cartItems, "price_at_time");
 
   const getTotalItems = () =>
     cartItems.reduce((sum, item) => sum + item.quantity, 0);

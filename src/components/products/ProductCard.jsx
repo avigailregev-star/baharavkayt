@@ -132,7 +132,7 @@ export default function ProductCard({ product, onAddToCart, index }) {
         <div className="flex items-center justify-between">
           {!product.name.includes("בר פירות") && !product.name.includes("סדנאות עיצוב") && (
             <div className="text-2xl font-bold text-teal-600">
-              ₪{product.price}
+              <bdi dir="ltr">₪{product.price}</bdi>
             </div>
           )}
           <Button

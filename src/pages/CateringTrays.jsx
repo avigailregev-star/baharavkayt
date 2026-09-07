@@ -1,3 +1,4 @@
+import { comparePrices } from "@/lib/price";
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -60,14 +61,14 @@ export default function CateringTrays() {
     const ordered = {};
     categoryOrder.forEach(cat => {
       if (grouped[cat]) {
-        ordered[cat] = grouped[cat].sort((a, b) => (a.price || 0) - (b.price || 0));
+        ordered[cat] = grouped[cat].sort(comparePrices);
       }
     });
     
     // הוסף קטגוריות שלא בסדר המותאם
     Object.keys(grouped).forEach(cat => {
       if (!ordered[cat]) {
-        ordered[cat] = grouped[cat].sort((a, b) => (a.price || 0) - (b.price || 0));
+        ordered[cat] = grouped[cat].sort(comparePrices);
       }
     });
     

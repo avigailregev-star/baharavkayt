@@ -1,3 +1,4 @@
+import { parsePrice, priceTotal } from "@/lib/price";
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/api/supabaseClient";
@@ -235,7 +236,7 @@ export default function AdminProducts() {
                         ? product.category.join(", ") 
                         : (product.category || "ללא קטגוריה")}
                     </TableCell>
-                    <TableCell>₪{product.price}</TableCell>
+                    <TableCell><bdi dir="ltr">₪{product.price}</bdi></TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
@@ -410,13 +411,17 @@ function ProductForm({ product, onSave, isLoading, categoryOptions }) {
             מחיר *
           </Label>
           <Input
-            type="number"
+            type="text"
+            dir="ltr"
+            aria-label="מחיר"
             value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-            placeholder="0"
+            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            placeholder="150 או 150-200"
             className="h-12 rounded-xl"
           />
         </div>
+
+        <p className="text-sm text-slate-500">אפשר להזין מחיר בודד או טווח, למשל 150-200. בטווח, המחיר הנמוך נכתב ראשון.</p>
 
         {/* Category */}
         <div>
@@ -510,8 +515,8 @@ function ProductForm({ product, onSave, isLoading, categoryOptions }) {
 
         {/* Save Button */}
         <Button
-          onClick={() => onSave(formData)}
-          disabled={isLoading || isUploading || !formData.name || !formData.price || !formData.category.trim()}
+          onClick={() => onSave({ ...formData, price: priceTotal(formData.price) })}
+          disabled={isLoading || isUploading || !formData.name || !parsePrice(formData.price) || !formData.category.trim()}
           className="w-full h-12 bg-amber-500 hover:bg-amber-600 rounded-xl"
         >
           {isLoading ? "שומר..." : "שמור"}

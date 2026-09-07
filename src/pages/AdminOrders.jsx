@@ -1,3 +1,4 @@
+import { priceTotal, sumPrices } from "@/lib/price";
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -467,8 +468,8 @@ export default function AdminOrders() {
                           </div>
                           {item.price && (
                             <div className="text-left">
-                              <p className="text-sm text-slate-500">₪{item.price} × {item.quantity}</p>
-                              <p className="font-bold text-teal-600">₪{item.price * item.quantity}</p>
+                              <p className="text-sm text-slate-500"><bdi dir="ltr">₪{item.price}</bdi> × {item.quantity}</p>
+                              <p className="font-bold text-teal-600"><bdi dir="ltr">₪{priceTotal(item.price, item.quantity)}</bdi></p>
                             </div>
                           )}
                         </div>
@@ -479,7 +480,7 @@ export default function AdminOrders() {
                           <div className="flex justify-between items-center">
                             <span className="text-lg font-bold text-slate-800">סה״כ הזמנה:</span>
                             <span className="text-2xl font-bold text-teal-600">
-                              ₪{orderItems.reduce((sum, item) => sum + (item.price * item.quantity || 0), 0)}
+                              <bdi dir="ltr">₪{sumPrices(orderItems)}</bdi>
                             </span>
                           </div>
                         </div>

@@ -8,7 +8,7 @@ create table products (
   id           uuid default gen_random_uuid() primary key,
   name         text not null,
   description  text,
-  price        numeric,
+  price        text,
   image        text[],          -- array of image URLs
   category     text,
   active       boolean default true,
@@ -54,7 +54,7 @@ create table order_items (
   order_id   uuid references orders(id) on delete cascade,
   product_id uuid references products(id),
   quantity   integer,
-  price      numeric,
+  price      text,
   notes      text
 );
 

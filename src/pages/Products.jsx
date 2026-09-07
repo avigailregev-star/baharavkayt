@@ -1,3 +1,4 @@
+import { comparePrices } from "@/lib/price";
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -117,14 +118,14 @@ export default function Products() {
     const ordered = {};
     categoryOrder.forEach(cat => {
       if (grouped[cat]) {
-        ordered[cat] = grouped[cat].sort((a, b) => (a.price || 0) - (b.price || 0));
+        ordered[cat] = grouped[cat].sort(comparePrices);
       }
     });
     
     // הוסף קטגוריות שלא בסדר המותאם
     Object.keys(grouped).forEach(cat => {
       if (!ordered[cat]) {
-        ordered[cat] = grouped[cat].sort((a, b) => (a.price || 0) - (b.price || 0));
+        ordered[cat] = grouped[cat].sort(comparePrices);
       }
     });
     

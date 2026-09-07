@@ -1,3 +1,4 @@
+import { comparePrices } from "@/lib/price";
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -21,7 +22,7 @@ export default function FruitTrays() {
         const categories = Array.isArray(p.category) ? p.category : [p.category];
         return categories.includes("מגשי פירות");
       });
-      return filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+      return filtered.sort(comparePrices);
     }
   });
 

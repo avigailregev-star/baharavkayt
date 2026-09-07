@@ -1,3 +1,4 @@
+import { priceTotal } from "@/lib/price";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -55,7 +56,7 @@ export default function Cart() {
 
   const handleWhatsAppOrder = () => {
     const cartItemsText = cartItems
-      .map(item => `• ${item.product_name} × ${item.quantity} – ₪${item.price_at_time * item.quantity}`)
+      .map(item => `• ${item.product_name} × ${item.quantity} – ₪${priceTotal(item.price_at_time, item.quantity)}`)
       .join("\n");
 
     const message = `היי ליבא 💛
@@ -161,7 +162,7 @@ ${cartItemsText}
                         {item.product_name}
                       </h3>
                       <p className="text-lg md:text-xl font-bold text-teal-600 mb-4">
-                        ₪{item.price_at_time}
+                        <bdi dir="ltr">₪{item.price_at_time}</bdi>
                       </p>
                       <div className="flex items-center gap-3 flex-wrap">
                         <div className="flex items-center gap-2 bg-slate-100 rounded-full px-3 py-1">
@@ -203,7 +204,7 @@ ${cartItemsText}
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-slate-800">
-                        ₪{item.price_at_time * item.quantity}
+                        <bdi dir="ltr">₪{priceTotal(item.price_at_time, item.quantity)}</bdi>
                       </p>
                     </div>
                   </div>
@@ -236,7 +237,7 @@ ${cartItemsText}
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-slate-800">סה״כ להזמנה:</span>
-                    <span className="text-2xl font-bold text-teal-600">₪{getTotalPrice()}</span>
+                    <span className="text-2xl font-bold text-teal-600"><bdi dir="ltr">₪{getTotalPrice()}</bdi></span>
                   </div>
                 </div>
 
